@@ -46,6 +46,8 @@ app.post("/api/v1/locations", async (req, res) => {
       [long, lat, addr.formattedAddress, timestamp]
     );
 
+    const latestData = await queryLatestData();
+
     wsServer.broadcastLocationUpdate(latestData);
 
     res.status(201).json({
