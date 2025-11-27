@@ -97,6 +97,7 @@ app.get("/", (req, res) => {
 app.post("/api/v1/locations", async (req, res) => {
   try {
     const { long, lat, addr } = req.body;
+    console.log(req.body);
     const timestamp = Date.now();
     wsServer.broadcast(
       JSON.stringify([
@@ -106,7 +107,7 @@ app.post("/api/v1/locations", async (req, res) => {
 
     await db.query(
       "INSERT INTO locations (longitude, latitude, adresse, timestamp) VALUES ($1, $2, $3, $4)",
-      [longitude, latitude, adresse, timestamp]
+      [long, lat, addr, timestamp]
     );
 
     res.status(201).json({
