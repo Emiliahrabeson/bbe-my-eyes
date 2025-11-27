@@ -29,7 +29,6 @@ const PORT = process.env.PORT || 3000;
 // init the ws server for real time communication
 
 wsServer.init(server);
-wsServer.handleConnection();
 wsServer.startHeartbeat();
 
 // Test route
