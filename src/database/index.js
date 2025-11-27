@@ -12,7 +12,7 @@ const pool = new Pool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: true,
+  ssl: process.env.NODE_ENV === "production",
 });
 
 // Test connection
