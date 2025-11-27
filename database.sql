@@ -7,6 +7,7 @@ CREATE DATABASE be_my_eyes;
 -- Drop tables if they exist (for clean setup)
 DROP TABLE IF EXISTS sensors CASCADE;
 DROP TABLE IF EXISTS locations CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
 
 -- Create locations table with auto-increment ID
 CREATE TABLE locations (
@@ -14,8 +15,7 @@ CREATE TABLE locations (
     longitude DECIMAL(10, 8) NOT NULL,
     latitude DECIMAL(10, 8) NOT NULL,
     adresse TEXT,
-    timestamp BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create sensors table with auto-increment ID
@@ -25,9 +25,8 @@ CREATE TABLE sensors (
     step INTEGER NOT NULL,
     calories REAL,
     velocity REAL,
-    timestamp BIGINT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     temperature BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (location_id) REFERENCES locations(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
