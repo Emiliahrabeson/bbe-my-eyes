@@ -96,9 +96,7 @@ export async function queryPairedData(limit = 10) {
         EXTRACT(EPOCH FROM timestamp) * 1000 as timestamp
       FROM locations
       ORDER BY id DESC
-      LIMIT $1
-    `,
-      [limit]
+    `
     );
 
     // Get recent sensors ordered by ID
@@ -113,9 +111,7 @@ export async function queryPairedData(limit = 10) {
         EXTRACT(EPOCH FROM timestamp) * 1000 as timestamp
       FROM sensors
       ORDER BY id DESC
-      LIMIT $1
-    `,
-      [limit]
+    `
     );
 
     const locations = locationResult.rows;
