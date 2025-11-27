@@ -2,41 +2,25 @@ import cors from "cors";
 import { config } from "dotenv";
 import express, { json, urlencoded } from "express";
 import http from "node:http";
-import db, { queryLatestData } from "./database/index.js";
+import db from "./database/index.js";
+import { queryLatestData } from "./database/queries.js";
 import client from "./mqtt/client.js";
-import wsServer from "./ws/ws.js";
+import wsServer from "./ws/socketIOServer.js";
 
 config();
 
 const app = express();
-// const privateKey = fs.readFileSync(process.env.SSL_KEY_PATH, "utf8");
-// const certificate = fs.readFileSync(process.env.SSL_CERT_PATH, "utf8");
-// const credentials = { key: privateKey, cert: certificate };
 
 // Middleware
 app.use(json());
 app.use(urlencoded({ extended: true }));
 app.use(cors());
 
-// ping the system to prevent sleep on render
-// setInterval(async () => {
-//   try {
-//     await ping.promise.probe("https://bbe-my-eyes.onrender.com");
-//     console.log("Ping completed");
-//   } catch (err) {
-//     console.error("Ping error", err);
-//   }
-// }, 40 * 1000);
-
 const server = http.createServer(app);
-
-// const server = https.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // init the ws server for real time communication
-
 wsServer.init(server);
-wsServer.startHeartbeat();
 
 // start the mqtt client
 client.connect(wsServer);
@@ -50,49 +34,6 @@ app.get("/", (req, res) => {
   });
 });
 
-// Get all locations
-// app.get("/api/v1/locations", async (req, res) => {
-//   try {
-//     const [rows] = await db.query("SELECT * FROM locations");
-//     res.json({
-//       success: true,
-//       data: rows,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// });
-
-// Get location by timestamp
-// app.get("/api/locations", async (req, res) => {
-//   try {
-//     const [rows] = await db.query(
-//       "SELECT * FROM locations WHERE timestamp = ?",
-//       [req.params.timestamp]
-//     );
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Location not found",
-//       });
-//     }
-
-//     res.json({
-//       success: true,
-//       data: rows[0],
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// });
-
 // Create new location
 app.post("/api/v1/locations", async (req, res) => {
   try {
@@ -105,9 +46,7 @@ app.post("/api/v1/locations", async (req, res) => {
       [long, lat, addr.formattedAddress, timestamp]
     );
 
-    const latestData = await queryLatestData();
-
-    wsServer.broadcast(JSON.stringify(latestData));
+    wsServer.broadcastLocationUpdate(latestData);
 
     res.status(201).json({
       success: true,
@@ -122,45 +61,6 @@ app.post("/api/v1/locations", async (req, res) => {
     });
   }
 });
-
-// Get all sensors
-// app.get("/api/sensors", async (req, res) => {
-//   try {
-//     const [rows] = await db.query("SELECT * FROM sensors");
-//     res.json({
-//       success: true,
-//       data: rows,
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// });
-
-// Create new sensor data
-// app.post("/api/sensors", async (req, res) => {
-//   try {
-//     const { step, calories, velocity, timestamp, temperature } = req.body;
-
-//     const [result] = await db.query(
-//       "INSERT INTO sensors (step, calories, velocity, timestamp, temperature) VALUES (?, ?, ?, ?, ?)",
-//       [step, calories, velocity, timestamp, temperature]
-//     );
-
-//     res.status(201).json({
-//       success: true,
-//       message: "Sensor data created successfully",
-//       data: { timestamp },
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       error: error.message,
-//     });
-//   }
-// });
 
 // Get location with sensor data (JOIN)
 app.get("/api/v1/data", async (req, res) => {
@@ -192,7 +92,7 @@ app.post("/api/v1/speech", async (req, res) => {
 
     await db.query("INSERT INTO messages (text_content) VALUES ($1)", [text]);
 
-    const clientCount = wsServer.broadcast(text);
+    const clientCount = wsServer.broadcastTextMessage(text);
 
     res.json({
       success: true,
