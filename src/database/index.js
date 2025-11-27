@@ -33,10 +33,11 @@ export async function queryLatestData() {
                 l.longitude, l.latitude, l.adresse, l.timestamp,
                 s.step as steps, s.calories, s.velocity as speed, s.temperature
             FROM locations l
-            LEFT JOIN sensors s ON l.id = s.id
+            JOIN sensors s ON l.id = s.id
             WHERE l.timestamp <= $1 ORDER BY s.id DESC`,
     [Date.now()]
   );
+  console.log(rows.rows);
   return rows.rows;
 }
 
