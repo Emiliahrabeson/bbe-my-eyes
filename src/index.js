@@ -169,7 +169,7 @@ app.get("/api/v1/data", async (req, res) => {
     console.log(timestamp);
     const rows = await queryLatestData();
 
-    res.json([...rows.rows]);
+    res.json(rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({
