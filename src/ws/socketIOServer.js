@@ -1,4 +1,5 @@
 import { Server as SocketIoServer } from "socket.io";
+import { queryLatestData } from "../database/queries.js";
 
 class SocketIOServer {
   constructor() {
@@ -14,7 +15,6 @@ class SocketIOServer {
     this.io = new SocketIoServer(server, {
       cors: {
         origin: "*",
-        credentials: true,
       },
     });
 
@@ -43,16 +43,6 @@ class SocketIOServer {
     console.log(`   - Client ID: ${clientId}`);
     console.log(`   - IP: ${clientIp}`);
     console.log(`   - Total clients: ${this.io.engine.clientsCount}\n`);
-
-    // 1. Remplacement de l'envoi de "type: connection"
-    // On envoie directement un événement nommé 'connection_success'
-    socket.emit("connect", {
-      message: "Connected to Be My Eyes Socket.IO Server",
-      clientId: clientId,
-      timestamp: Date.now(),
-    });
-
-    // 2. Remplacement de ws.on("message", ...) par des écouteurs d'événements nommés
 
     // L'ancien "handleMessage" qui faisait un ECHO de tout message reçu
     socket.on("client_message", (message) => {
@@ -120,8 +110,6 @@ class SocketIOServer {
 
     emitter.emit(eventName, data);
 
-    // Note: Obtenir le nombre exact de clients envoyés est plus complexe
-    // avec 'except', mais clientsCount donne une bonne estimation.
     const sentCount = this.io.engine.clientsCount - (excludeClientId ? 1 : 0);
     console.log(
       `📤 Broadcast sent (Event: ${eventName}) to approx. ${sentCount} client(s)`
@@ -129,14 +117,11 @@ class SocketIOServer {
     return sentCount;
   }
 
-  // Remplacement des méthodes broadcast spécifiques (plus simples !)
-
-  broadcastLocationUpdate(locationData, excludeId = null) {
-    // 1. L'événement est le "path" (location_update)
-    // 2. Les données sont directement les données de localisation
+  async broadcastLocationUpdate(locationData, excludeId = null) {
+    const latestData = await queryLatestData();
     return this.broadcast(
       "location_update",
-      { data: locationData, timestamp: Date.now() },
+      JSON.stringify(latestData),
       excludeId
     );
   }
@@ -174,7 +159,6 @@ class SocketIOServer {
         id: clientId,
         ip: metadata.ip,
         connectedAt: metadata.connectedAt,
-        // isAlive est géré par Socket.IO mais non directement exposé ici
         isAlive: true,
       });
     });
