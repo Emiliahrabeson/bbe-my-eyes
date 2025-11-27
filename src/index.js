@@ -2,6 +2,7 @@ import cors from "cors";
 import { config } from "dotenv";
 import express from "express";
 import http from "node:http";
+import ping from "ping";
 import db from "./database/index.js";
 import client from "./mqtt/client.js";
 import wsServer from "./ws/ws.js";
@@ -18,13 +19,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+// ping the system to prevent sleep on render
+setInterval(async () => {
+  await ping.promise.probe("bbe-my-eyes.onrender.com");
+  console.log("Ping completed");
+}, 40 * 1000);
+
 const server = http.createServer(app);
 
 // const server = https.createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // start the mqtt client
-// client.connect();
+client.connect();
 
 // init the ws server for real time communication
 
@@ -93,7 +100,7 @@ app.post("/api/v1/locations", async (req, res) => {
     );
 
     const [result] = await db.query(
-      "INSERT INTO locations (longitude, latitude, adresse, timestamp) VALUES (?, ?, ?, ?)",
+      "INSERT INTO locations (longitude, latitude, adresse, timestamp) VALUES ($1, $2, $3, $4)",
       [longitude, latitude, adresse, timestamp]
     );
 
@@ -159,7 +166,7 @@ app.get("/api/v1/data", async (req, res) => {
                 s.step, s.calories, s.velocity, s.temperature
             FROM locations l
             LEFT JOIN sensors s ON l.timestamp = s.timestamp
-            WHERE l.timestamp >= ?`,
+            WHERE l.timestamp >= $1`,
       [timestamp]
     );
 
@@ -213,5 +220,5 @@ app.post("/api/v1/speech", async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✓ Server running on http://localhost:${PORT}`);
+  console.log(`✓ Server running on http://0.0.0.0:${PORT}`);
 });

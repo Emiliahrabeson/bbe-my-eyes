@@ -1,25 +1,51 @@
-CREATE DATABASE  IF NOT EXISTS be_my_eyes;
+-- Create database
+CREATE DATABASE be_my_eyes;
 
-USE be_my_eyes;
+-- Connect to the database
+\c be_my_eyes;
 
--- Create Locations table
+-- Drop tables if they exist (for clean setup)
+DROP TABLE IF EXISTS sensors CASCADE;
+DROP TABLE IF EXISTS locations CASCADE;
+
+-- Create locations table with auto-increment ID
 CREATE TABLE locations (
+    id SERIAL PRIMARY KEY,
     longitude DECIMAL(10, 8) NOT NULL,
     latitude DECIMAL(10, 8) NOT NULL,
     adresse TEXT,
     timestamp BIGINT NOT NULL,
-    PRIMARY KEY (timestamp)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Create Sensors table
+-- Create sensors table with auto-increment ID
 CREATE TABLE sensors (
-    step INT NOT NULL,
-    calories FLOAT,
-    velocity FLOAT,
+    id SERIAL PRIMARY KEY,
+    location_id INTEGER,
+    step INTEGER NOT NULL,
+    calories REAL,
+    velocity REAL,
     timestamp BIGINT NOT NULL,
-    temperature FLOAT,
-    PRIMARY KEY (timestamp),
-    FOREIGN KEY (timestamp) REFERENCES locations(timestamp)
+    temperature BIGINT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (location_id) REFERENCES locations(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_locations_id ON locations(id);
+CREATE INDEX idx_locations_timestamp ON locations(timestamp);
+CREATE INDEX idx_locations_created_at ON locations(created_at DESC);
+
+CREATE INDEX idx_sensors_id ON sensors(id);
+CREATE INDEX idx_sensors_location_id ON sensors(location_id);
+CREATE INDEX idx_sensors_timestamp ON sensors(timestamp);
+CREATE INDEX idx_sensors_created_at ON sensors(created_at DESC);
+
+-- Display tables
+\dt
+
+-- Display table structures
+\d locations
+\d sensors

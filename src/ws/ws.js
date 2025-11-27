@@ -3,32 +3,36 @@ import { WebSocketServer as WsServer } from "ws";
 class WebSocketServer {
   constructor() {
     this.wss = null;
-    this.clients = new Map(); // Store clients with metadata
+    this.clients = new Map();
   }
 
-  // Initialize WebSocket server
   init(server) {
-    this.wss = new WsServer({ server });
+    this.wss = new WsServer({
+      server,
+    });
 
     console.log("✓ WebSocket Server initialized");
 
-    // Setup connection handler
     this.wss.on("connection", (ws, req) => {
       this.handleConnection(ws, req);
     });
 
-    // Setup error handler
     this.wss.on("error", (error) => {
       console.error("✗ WebSocket Server Error:", error.message);
     });
+
+    server.on("upgrade", (request, socket, head) => {
+      const pathname = new URL(request.url, "http://localhost").pathname;
+      this.wss.handleUpgrade(request, socket, head, (ws) => {
+        this.wss.emit("connection", ws, request);
+      });
+    });
   }
 
-  // Handle new client connection
   handleConnection(ws, req) {
     const clientId = this.generateClientId();
     const clientIp = req.socket.remoteAddress;
 
-    // Store client information
     this.clients.set(clientId, {
       ws,
       id: clientId,
@@ -40,9 +44,9 @@ class WebSocketServer {
     console.log(`\n✓ New WebSocket client connected`);
     console.log(`   - Client ID: ${clientId}`);
     console.log(`   - IP: ${clientIp}`);
+    console.log(`   - Path: /ws`);
     console.log(`   - Total clients: ${this.clients.size}\n`);
 
-    // Send welcome message
     this.sendToClient(clientId, {
       type: "connection",
       message: "Connected to Be My Eyes WebSocket Server",
@@ -50,12 +54,10 @@ class WebSocketServer {
       timestamp: Date.now(),
     });
 
-    // Setup message handler
     ws.on("message", (data) => {
       this.handleMessage(clientId, data);
     });
 
-    // Setup pong handler (for heartbeat)
     ws.on("pong", () => {
       const client = this.clients.get(clientId);
       if (client) {
@@ -63,25 +65,21 @@ class WebSocketServer {
       }
     });
 
-    // Setup close handler
     ws.on("close", () => {
       this.handleDisconnection(clientId);
     });
 
-    // Setup error handler
     ws.on("error", (error) => {
       console.error(`✗ WebSocket Error for client ${clientId}:`, error.message);
     });
   }
 
-  // Handle incoming messages from clients
   handleMessage(clientId, data) {
     try {
       const message = JSON.parse(data.toString());
 
       console.log(`📨 Message from client ${clientId}:`, message);
 
-      // Echo back or process message
       this.sendToClient(clientId, {
         type: "echo",
         message: "Message received",
@@ -101,7 +99,6 @@ class WebSocketServer {
     }
   }
 
-  // Handle client disconnection
   handleDisconnection(clientId) {
     const client = this.clients.get(clientId);
     if (client) {
@@ -111,7 +108,6 @@ class WebSocketServer {
     }
   }
 
-  // Send message to specific client
   sendToClient(clientId, data) {
     const client = this.clients.get(clientId);
     if (client && client.ws.readyState === WebSocket.OPEN) {
@@ -121,7 +117,6 @@ class WebSocketServer {
     return false;
   }
 
-  // Broadcast message to all connected clients
   broadcast(data, excludeClientId = null) {
     let sentCount = 0;
 
@@ -139,7 +134,6 @@ class WebSocketServer {
     return sentCount;
   }
 
-  // Send location update to all clients
   broadcastLocationUpdate(locationData) {
     const message = {
       type: "location_update",
@@ -150,7 +144,6 @@ class WebSocketServer {
     return this.broadcast(message);
   }
 
-  // Send sensor update to all clients
   broadcastSensorUpdate(sensorData) {
     const message = {
       type: "sensor_update",
@@ -161,7 +154,6 @@ class WebSocketServer {
     return this.broadcast(message);
   }
 
-  // Send custom text message to all clients
   broadcastTextMessage(text, metadata = {}) {
     const message = {
       type: "text_message",
@@ -173,7 +165,6 @@ class WebSocketServer {
     return this.broadcast(message);
   }
 
-  // Send notification to all clients
   broadcastNotification(title, body, data = {}) {
     const message = {
       type: "notification",
@@ -188,7 +179,6 @@ class WebSocketServer {
     return this.broadcast(message);
   }
 
-  // Get all connected clients
   getClients() {
     const clientList = [];
     this.clients.forEach((client, clientId) => {
@@ -202,17 +192,14 @@ class WebSocketServer {
     return clientList;
   }
 
-  // Get client count
   getClientCount() {
     return this.clients.size;
   }
 
-  // Generate unique client ID
   generateClientId() {
-    return `client_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    return `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  // Start heartbeat to check client connections
   startHeartbeat() {
     setInterval(() => {
       this.clients.forEach((client, clientId) => {
@@ -226,11 +213,9 @@ class WebSocketServer {
         client.isAlive = false;
         client.ws.ping();
       });
-    }, 30000); // Check every 30 seconds
+    }, 30000);
   }
 }
 
-// Create singleton instance
 const wsServer = new WebSocketServer();
-
 export default wsServer;

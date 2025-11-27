@@ -1,10 +1,9 @@
 import { config } from "dotenv";
-import mysql from "mysql2";
-
+import { Pool } from "pg";
 config();
 
 // Create connection pool
-const pool = mysql.createPool({
+const pool = new Pool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -13,19 +12,34 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  ssl: true,
 });
 
 // Get promise-based connection
-const promisePool = pool.promise();
+// const promisePool = pool.promise();
 
 // Test connection
-pool.getConnection((err, connection) => {
+pool.connect((err) => {
   if (err) {
-    console.error("Error connecting to MySQL database:", err.message);
+    console.error("Error connecting to database:", err.message);
     return;
   }
-  console.log("✓ MySQL database connected successfully");
-  connection.release();
+  console.log("✓ Database connected successfully");
 });
 
-export default promisePool;
+// function query() {
+//   async (text, params) => {
+//     const start = Date.now();
+//     try {
+//       const res = await pool.query(text, params);
+//       const duration = Date.now() - start;
+//       console.log("Executed query", { text, duration, rows: res.rowCount });
+//       return res;
+//     } catch (error) {
+//       console.error("Database query error:", error);
+//       throw error;
+//     }
+//   };
+// }
+
+export default pool;
