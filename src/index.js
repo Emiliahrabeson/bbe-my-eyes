@@ -113,7 +113,7 @@ app.post("/api/v1/locations", async (req, res) => {
     const rows = await db.query(
       `SELECT 
                 l.longitude, l.latitude, l.adresse, l.timestamp,
-                s.step, s.calories, s.velocity, s.temperature
+                s.step as steps, s.calories, s.velocity as speed, s.temperature
             FROM locations l
             LEFT JOIN sensors s ON l.id = s.id
             WHERE l.timestamp <= $1 ORDER BY s.id DESC`,
@@ -183,7 +183,7 @@ app.get("/api/v1/data", async (req, res) => {
     const rows = await db.query(
       `SELECT 
                 l.longitude, l.latitude, l.adresse, l.timestamp,
-                s.step, s.calories, s.velocity, s.temperature
+                s.step as steps, s.calories, s.velocity as speed, s.temperature
             FROM locations l
             JOIN sensors s ON l.id = s.id
             WHERE l.timestamp <= $1`,
