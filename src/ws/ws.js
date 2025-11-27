@@ -20,13 +20,6 @@ class WebSocketServer {
     this.wss.on("error", (error) => {
       console.error("✗ WebSocket Server Error:", error.message);
     });
-
-    server.on("upgrade", (request, socket, head) => {
-      const pathname = new URL(request.url, "http://localhost").pathname;
-      this.wss.handleUpgrade(request, socket, head, (ws) => {
-        this.wss.emit("connection", ws, request);
-      });
-    });
   }
 
   handleConnection(ws, req) {
@@ -44,7 +37,7 @@ class WebSocketServer {
     console.log(`\n✓ New WebSocket client connected`);
     console.log(`   - Client ID: ${clientId}`);
     console.log(`   - IP: ${clientIp}`);
-    console.log(`   - Path: /ws`);
+    console.log(`   - Path: /`);
     console.log(`   - Total clients: ${this.clients.size}\n`);
 
     this.sendToClient(clientId, {

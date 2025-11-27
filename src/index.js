@@ -2,7 +2,6 @@ import cors from "cors";
 import { config } from "dotenv";
 import express, { json, urlencoded } from "express";
 import http from "node:http";
-import ping from "ping";
 import db from "./database/index.js";
 import client from "./mqtt/client.js";
 import wsServer from "./ws/ws.js";
@@ -20,14 +19,14 @@ app.use(urlencoded({ extended: true }));
 app.use(cors());
 
 // ping the system to prevent sleep on render
-setInterval(async () => {
-  try {
-    await ping.promise.probe("https://bbe-my-eyes.onrender.com");
-    console.log("Ping completed");
-  } catch (err) {
-    console.error("Ping error", err);
-  }
-}, 40 * 1000);
+// setInterval(async () => {
+//   try {
+//     await ping.promise.probe("https://bbe-my-eyes.onrender.com");
+//     console.log("Ping completed");
+//   } catch (err) {
+//     console.error("Ping error", err);
+//   }
+// }, 40 * 1000);
 
 const server = http.createServer(app);
 
@@ -192,9 +191,6 @@ app.get("/api/v1/data", async (req, res) => {
   }
 });
 
-// body: {
-//   text: "string";
-// }
 app.post("/api/v1/speech", async (req, res) => {
   const { text } = req.body;
   try {
@@ -223,6 +219,6 @@ app.post("/api/v1/speech", async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`✓ Server running on http://0.0.0.0:${PORT}`);
 });

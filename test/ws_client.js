@@ -4,11 +4,11 @@ const wsClient = new WebSocket("ws://localhost:3000");
 
 wsClient.on("open", () => {
   console.log("connected to the server");
-  wsClient.send("Welcoùe");
+  wsClient.send(JSON.stringify("Welcoùe"));
 });
 
 wsClient.on("message", (message) => {
-  console.log("new message received", message);
+  console.log("new message received", message.toString());
 });
 
 wsClient.on("close", () => {
