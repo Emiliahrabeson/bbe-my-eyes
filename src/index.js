@@ -99,16 +99,28 @@ app.post("/api/v1/locations", async (req, res) => {
     const { long, lat, addr } = req.body;
     console.log(req.body);
     const timestamp = Date.now();
-    wsServer.broadcast(
-      JSON.stringify([
-        { longitude: long, latitude: lat, adresse: addr, timestamp },
-      ])
-    );
+    // wsServer.broadcast(
+    //   JSON.stringify([
+    //     { longitude: long, latitude: lat, adresse: addr, timestamp },
+    //   ])
+    // );
 
     await db.query(
       "INSERT INTO locations (longitude, latitude, adresse, timestamp) VALUES ($1, $2, $3, $4)",
       [long, lat, addr, timestamp]
     );
+
+    const rows = await db.query(
+      `SELECT 
+                l.longitude, l.latitude, l.adresse, l.timestamp,
+                s.step, s.calories, s.velocity, s.temperature
+            FROM locations l
+            LEFT JOIN sensors s ON l.id = s.id
+            WHERE l.timestamp <= $1 ORDER BY s.id DESC`,
+      [timestamp]
+    );
+
+    wsServer.broadcast(JSON.stringify(rows.rows));
 
     res.status(201).json({
       success: true,
@@ -166,20 +178,21 @@ app.post("/api/v1/locations", async (req, res) => {
 // Get location with sensor data (JOIN)
 app.get("/api/v1/data", async (req, res) => {
   try {
-    const timestamp = Date.now() - 1000000;
+    const timestamp = Date.now();
+    console.log(timestamp);
     const rows = await db.query(
       `SELECT 
                 l.longitude, l.latitude, l.adresse, l.timestamp,
                 s.step, s.calories, s.velocity, s.temperature
             FROM locations l
-            LEFT JOIN sensors s ON l.id = s.id
-            WHERE l.timestamp >= $1`,
+            JOIN sensors s ON l.id = s.id
+            WHERE l.timestamp <= $1`,
       [timestamp]
     );
 
-    res.json({
-      ...rows.rows,
-    });
+    console.log(rows.rows);
+
+    res.json([...rows.rows]);
   } catch (error) {
     console.error(error);
     res.status(500).json({
