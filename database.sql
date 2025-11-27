@@ -36,8 +36,8 @@ CREATE TABLE sensors (
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_read BOOLEAN DEFAULT false
-    text TEXT
+    is_read BOOLEAN DEFAULT false,
+    text_content TEXT
 );
 
 -- Create indexes for better performance

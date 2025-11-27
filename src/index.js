@@ -96,10 +96,12 @@ app.get("/", (req, res) => {
 // Create new location
 app.post("/api/v1/locations", async (req, res) => {
   try {
-    const { longitude, latitude, adresse } = req.body;
+    const { long, lat, addr } = req.body;
     const timestamp = Date.now();
     wsServer.broadcast(
-      JSON.stringify([{ longitude, latitude, adresse, timestamp }])
+      JSON.stringify([
+        { longitude: long, latitude: lat, adresse: addr, timestamp },
+      ])
     );
 
     await db.query(
@@ -194,18 +196,19 @@ app.get("/api/v1/data", async (req, res) => {
 });
 
 app.post("/api/v1/speech", async (req, res) => {
-  const { text } = req.body;
   try {
-    const { message, metadata } = req.body;
+    const { text } = req.body;
 
-    if (!message) {
+    if (!text) {
       return res.status(400).json({
         success: false,
         error: "Message is required",
       });
     }
 
-    const clientCount = wsServer.broadcastTextMessage(message, metadata || {});
+    await db.query("INSERT INTO messages (text_content) VALUES ($1)", [text]);
+
+    const clientCount = wsServer.broadcastTextMessage(text, metadata || {});
 
     res.json({
       success: true,
