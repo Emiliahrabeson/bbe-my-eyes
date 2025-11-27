@@ -42,8 +42,8 @@ app.post("/api/v1/locations", async (req, res) => {
     const timestamp = Date.now();
 
     await db.query(
-      "INSERT INTO locations (longitude, latitude, adresse, timestamp) VALUES ($1, $2, $3, $4)",
-      [long, lat, addr.formattedAddress, timestamp]
+      "INSERT INTO locations (longitude, latitude, adresse) VALUES ($1, $2, $3)",
+      [long, lat, addr.formattedAddress]
     );
 
     wsServer.broadcastLocationUpdate({
