@@ -264,3 +264,24 @@ export async function queryJoinedByID(limit = 10) {
     throw error;
   }
 }
+
+export async function queryUnreadMessages() {
+  try {
+    const result = await db.query(`
+      SELECT 
+        id,
+        text_content,
+      FROM messages
+      WHERE is_read = false
+      ORDER BY created_at ASC
+    `);
+
+    return result.rows.map((row) => ({
+      id: row.id,
+      text: row.text_content,
+    }));
+  } catch (error) {
+    console.error("Error querying unread messages:", error);
+    throw error;
+  }
+}

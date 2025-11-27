@@ -3,7 +3,7 @@ import { config } from "dotenv";
 import express, { json, urlencoded } from "express";
 import http from "node:http";
 import db from "./database/index.js";
-import { queryPairedData } from "./database/queries.js";
+import { queryPairedData, queryUnreadMessages } from "./database/queries.js";
 import client from "./mqtt/client.js";
 import wsServer from "./ws/socketIOServer.js";
 
@@ -95,11 +95,14 @@ app.post("/api/v1/speech", async (req, res) => {
       });
     }
 
-    await db.query("INSERT INTO messages (text_content) VALUES ($1)", [text]);
+    const result = await db.query(
+      "INSERT INTO messages (text_content) VALUES ($1) RETURNING id",
+      [text]
+    );
 
     const clientCount = wsServer.broadcast(
       "incoming_message",
-      JSON.stringify(text)
+      JSON.stringify({ id: result.rows[0].id, text })
     );
 
     res.json({
@@ -115,7 +118,44 @@ app.post("/api/v1/speech", async (req, res) => {
   }
 });
 
+app.patch("/api/v1/speech/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    db.query("UPDATE messages SET is_read = true where id = $1", [id]);
+    res.status(202).json({
+      message: "message read",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Internal Server Error");
+  }
+});
+
 // Start server
 server.listen(PORT, () => {
   console.log(`✓ Server running on http://0.0.0.0:${PORT}`);
+  unreadMessageChecker();
 });
+
+const unreadMessageChecker = () => {
+  const CHECK_INTERVAL = 30 * 1000;
+
+  setInterval(async () => {
+    try {
+      const unreadMessages = await queryUnreadMessages();
+
+      if (unreadMessages.length > 0) {
+        console.log(`📬 Found ${unreadMessages.length} unread message(s)`);
+
+        // Broadcast all unread messages to connected clients
+        wsServer.broadcast("unread_messages", JSON.stringify(unreadMessages));
+      }
+    } catch (error) {
+      console.error("Error checking unread messages:", error);
+    }
+  }, CHECK_INTERVAL);
+
+  console.log(
+    `✓ Unread message checker started (interval: ${CHECK_INTERVAL}ms)`
+  );
+};
