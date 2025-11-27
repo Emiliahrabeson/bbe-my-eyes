@@ -1,12 +1,11 @@
 import { config } from "dotenv";
 import mqtt from "mqtt";
 import db from "../database/index.js";
-import wsServer from "../ws/socketIOServer.js";
 
 config();
 
 class MQTTClient {
-  constructor(wss) {
+  constructor(wsServer) {
     this.client = null;
     this.isConnected = false;
     this.wss = wsServer;
