@@ -270,7 +270,7 @@ export async function queryUnreadMessages() {
     const result = await db.query(`
       SELECT 
         id,
-        text_content,
+        text_content
       FROM messages
       WHERE is_read = false
       ORDER BY created_at ASC
