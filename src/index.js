@@ -113,6 +113,7 @@ app.post("/api/v1/locations", async (req, res) => {
       data: { timestamp },
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -184,6 +185,7 @@ app.get("/api/v1/data", async (req, res) => {
       ...rows,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       error: error.message,
