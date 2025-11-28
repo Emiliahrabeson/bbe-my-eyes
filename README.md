@@ -11,6 +11,25 @@ MQTT_TOPIC_LOCATIONS=be_my_eyes/locations #for ex.
 MQTT_TOPIC_SENSORS=be_my_eyes/sensors #for ex.
 ```
 
+- Complete `.env` example
+
+```bash
+DB_HOST=localhost
+DB_USER=mandrindra
+DB_PASSWORD=123456
+DB_NAME=be_my_eyes
+DB_PORT=5432
+PORT=3000
+
+MQTT_BROKER=mqtt://broker.hivemq.com
+MQTT_PORT=1883
+MQTT_USERNAME=
+MQTT_PASSWORD=
+MQTT_TOPIC_LOCATIONS=be_my_eyes/locations
+MQTT_TOPIC_SENSORS=be_my_eyes/sensors
+
+```
+
 #### Have a socket.io server for real time communication
 
 - Emit `incoming_message` when there is new message that needs to be read by the tts module
@@ -25,7 +44,7 @@ MQTT_TOPIC_SENSORS=be_my_eyes/sensors #for ex.
 
 - Have data history at `/api/v1/data`
 - Save location data at `/api/v1/locations`
-- Send speech data at `/api/v1/speech`
+- Send and Update speech data at `/api/v1/speech`
 
 ## How to install it?
 

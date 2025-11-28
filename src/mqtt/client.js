@@ -113,10 +113,10 @@ class MQTTClient {
   // Save sensor data to database
   async saveSensor(data) {
     try {
-      const { step, calories, velocity, timestamp, temperature } = data;
+      const { step, calories, velocity, temperature } = data;
 
       // Validate required fields
-      if (step === undefined || !timestamp) {
+      if (step === undefined) {
         console.error("Missing required fields for sensor");
         return;
       }
