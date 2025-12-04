@@ -143,6 +143,18 @@ class SocketIOServer {
       excludeId
     );
   }
+    
+  broadcastStepUpdate (stepData, excludeId = null) {
+    return this.broadcast(
+      "update_steps",
+      JSON.stringify({ timestamp: Date.now(),...stepData}),
+      excludeId
+    );
+  }  
+
+  async broadcastDataUpdate(data) {
+     return this.brodcast("update:data", JSON.stringify(data));
+  }
 
   getClients() {
     const clientList = [];

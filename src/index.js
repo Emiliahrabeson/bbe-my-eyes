@@ -45,12 +45,10 @@ app.post("/api/v1/locations", async (req, res) => {
       "INSERT INTO locations (longitude, latitude, adresse) VALUES ($1, $2, $3)",
       [long, lat, addr.formattedAddress]
     );
+    
+    const data = queryPairedData();
 
-    wsServer.broadcastLocationUpdate({
-      longitude: long,
-      latitude: lat,
-      adresse: addr,
-    });
+    wsServer.broadcastDataUpdate(data);
 
     res.status(201).json({
       success: true,
@@ -82,6 +80,38 @@ app.get("/api/v1/data", async (req, res) => {
       error: error.message,
     });
   }
+});
+
+app.post("/api/v1/steps", async (req,res) => {
+  try {
+    const { step, speed, calories} = req.body;
+    console.log(req.body);
+    
+     await db.query(
+      "INSERT INTO sensors (step, calories, velocity) VALUES ($1, $2, $3)",
+      [step, speed, calories]
+    );
+
+  const data = queryPairedData();
+
+    wsServer.broadcastDataUpdate(data);
+
+
+
+  //  wsServer.broadcastStepUpdate(req.body);
+     res.status(201).json({
+      success: true,
+      data: { timestamp },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+
+
 });
 
 app.post("/api/v1/speech", async (req, res) => {
